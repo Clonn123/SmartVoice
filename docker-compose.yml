@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+  asterisk:
+    image: andrius/asterisk:latest
+
+    container_name: asterisk
+
+    restart: unless-stopped
+
+    ports:
+      # SIP
+      - "5060:5060/udp"
+      - "5060:5060/tcp"
+
+      # ARI
+      - "8088:8088"
+
+      # RTP
+      - "10000-10100:10000-10100/udp"
+
+    volumes:
+      # Конфиги
+      - ./asterisk_config/pjsip.conf:/etc/asterisk/pjsip.conf
+      - ./asterisk_config/extensions.conf:/etc/asterisk/extensions.conf
+      - ./asterisk_config/rtp.conf:/etc/asterisk/rtp.conf
+      - ./asterisk_config/http.conf:/etc/asterisk/http.conf
+      - ./asterisk_config/ari.conf:/etc/asterisk/ari.conf
+
+      # Логи
+      - ./asterisk_log:/var/log/asterisk
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    networks:
+      - asterisk_net
+
+networks:
+  asterisk_net:
+    driver: bridge
