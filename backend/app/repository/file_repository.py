@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import json
 import logging
@@ -10,7 +10,12 @@ from app.modules.calls.schemas import ProcessCallsResponse
 logger = logging.getLogger(__name__)
 
 
-class JsonCallResultStorage:
+class FileCallResultRepository:
+    """Простой файловый репозиторий для результатов звонков.
+
+    Пока в json, потом Postgres + SQLAlchemy.
+    """
+
     def __init__(self, storage_dir: str | None = None) -> None:
         settings = get_settings()
         self.storage_dir = Path(storage_dir or settings.result_storage_dir)

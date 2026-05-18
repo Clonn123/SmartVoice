@@ -16,7 +16,7 @@ from app.modules.calls.schemas import (
     ProcessCallsResponse,
     ProcessedCallResult,
 )
-from app.modules.calls.storage import JsonCallResultStorage
+from app.repository import FileCallResultRepository
 from app.modules.llm.base import CallMessage, LlmCallContext
 from app.modules.llm.factory import get_llm_gateway
 
@@ -28,7 +28,7 @@ class CallService:
         self.settings = get_settings()
         self.llm = get_llm_gateway()
         self.call_runtime = get_call_runtime_gateway()
-        self.storage = JsonCallResultStorage()
+        self.storage = FileCallResultRepository()
 
     async def process(self, payload: ProcessCallsRequest) -> ProcessCallsResponse:
         job_id = str(uuid4())

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 Сценарий быстрого тестирования провайдера OpenRouter.
 Использование: python test_openrouter.py
@@ -23,7 +22,7 @@ async def test_openrouter() -> None:
     print()
     
     if settings.llm_provider != "openrouter":
-        print("❌ LLM_PROVIDER не установлен в 'openrouter'")
+        print("LLM_PROVIDER не установлен в 'openrouter'")
         print("   Обновите файл .env:")
         print("   LLM_PROVIDER=openrouter")
         print("   LLM_OPENROUTER_API_KEY=sk-or-...")
@@ -31,7 +30,7 @@ async def test_openrouter() -> None:
         return
     
     if not settings.llm_openrouter_api_key:
-        print("❌ LLM_OPENROUTER_API_KEY не установлен")
+        print("LLM_OPENROUTER_API_KEY не установлен")
         print("   1. Получите API ключ на https://openrouter.ai/keys")
         print("   2. Добавьте в .env:")
         print("   LLM_OPENROUTER_API_KEY=sk-or-...")
@@ -40,7 +39,7 @@ async def test_openrouter() -> None:
     print("✓ Конфигурация выглядит корректной")
     print()
     
-    # Create test context
+    # Создаём тестовый контекст
     context = LlmCallContext(
         prompt="Напомни клиенту о договоре и спроси его, помнит ли он о нём. Скажи, что звонишь только напомнить о задолжности, больше не нужно ничего.",
         scenario="contract_reminder",
@@ -70,7 +69,7 @@ async def test_openrouter() -> None:
         print(f"  Использовано токенов: {usage.get('total_tokens', '?')}")
         print()
         
-        # Тест с историей диалога
+        # Проверяем ответ с историей диалога
         print("Тестирование generate_reply (с ответом клиента)...")
         print("-" * 50)
         context = LlmCallContext(
@@ -88,7 +87,7 @@ async def test_openrouter() -> None:
         print(f"  Использовано токенов: {reply2.raw_payload.get('usage', {}).get('total_tokens', '?')}")
         print()
         
-        # Тест создания резюме
+        # Проверяем создание резюме
         print("Тестирование создания резюме...")
         print("-" * 50)
         
@@ -100,12 +99,12 @@ async def test_openrouter() -> None:
         print(f"  Использовано токенов: {summary.raw_payload.get('usage', {}).get('total_tokens', '?')}")
         print()
         
-        print("✅ Все тесты пройдены успешно!")
+        print("Все тесты пройдены успешно!")
         
     except ValueError as exc:
-        print(f"❌ Ошибка конфигурации: {exc}")
+        print(f"Ошибка конфигурации: {exc}")
     except Exception as exc:
-        print(f"❌ Ошибка: {exc}")
+        print(f"Ошибка: {exc}")
         import traceback
         traceback.print_exc()
 

@@ -9,15 +9,22 @@
 
 MVP-сценарий сейчас — напоминание или уточнение информации по договору. При этом схема не зашита только под договоры: специфичные поля сценария лежат в `payload`, а общие поля вынесены в отдельные поля ответа.
 
-Пока БД нет: результат каждого запроса сохраняется в JSON-файл.
+Сейчас результаты запросов сохраняются в JSON-файлы через файловый репозиторий.
+Позже этот слой заменим на PostgreSQL + SQLAlchemy.
 
 ## Структура проекта
 
-- `app/modules/calls/` — основная логика обзвона: схемы API, обработка списка клиентов, runtime-контракт и JSON-хранилище.
-- `app/modules/calls/runtime.py` — минимальный контракт для будущей интеграции со звонками. Реальной телефонии тут нет.
-- `app/modules/calls/mock_runtime.py` — mock-реализация звонка для локальной проверки пайплайна.
-- `app/modules/calls/storage.py` — сохранение результата в `data/call_results/<job_id>.json`.
-- `app/modules/llm/` — LLM-интерфейс и mock-реализация модели.
+- `backend/` — основной FastAPI сервис (LLM, сценарии, оркестрация звонков).
+- `frontend/` — будущий фронт.
+
+Ключевые файлы внутри `backend/`:
+
+- `backend/app/modules/calls/` — основная логика обзвона: схемы API, обработка списка клиентов и runtime-контракт.
+- `backend/app/modules/calls/runtime.py` — минимальный контракт для будущей интеграции со звонками. Реальной телефонии тут нет.
+- `backend/app/modules/calls/mock_runtime.py` — mock-реализация звонка для локальной проверки пайплайна.
+- `backend/app/modules/telephony/` — Asterisk-конфиги и локальный тестовый скрипт для телефонии.
+- `backend/app/repository/` — файловый репозиторий результатов звонков и задел под PostgreSQL + SQLAlchemy.
+- `backend/app/modules/llm/` — LLM-интерфейс и реализация модели.
 
 ## Что сохраняется в JSON
 
@@ -30,8 +37,9 @@ MVP-сценарий сейчас — напоминание или уточне
 ## Локальный запуск
 
 ```powershell
+cd backend
 python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+\.venv\Scripts\Activate.ps1
 pip install -e ".[dev]"
 uvicorn app.main:app --reload
 ```
@@ -130,13 +138,15 @@ uvicorn app.main:app --reload
 ## Логи и результаты
 
 При запуске через `uvicorn` процесс обработки пишется в консоль через стандартный `logging`.
-Уровень логов можно поменять в `.env`:
+Уровень логов можно поменять в `backend/.env`:
 
 ```env
 LOG_LEVEL=INFO
 ```
 
-Результаты mock-запросов сохраняются в `data/call_results/<job_id>.json`.
+Результаты mock-запросов сохраняются в `backend/data/call_results/<job_id>.json`.
+
+Текущая реализация записи результатов находится в `backend/app/repository/file_repository.py`.
 
 ### Локальный STT через Vosk
 
@@ -152,9 +162,3 @@ VOSK_TEST_AUDIO_PATH=C:/temp/test.wav
 ```
 
 Если `VOSK_TEST_AUDIO_PATH` не задан, runtime вернет fallback-текст, чтобы пайплайн оставался рабочим.
-## Точки интеграции
-
-- `app/modules/llm/mock.py` заменить на реальный LLM-gateway: Gemini API, другой внешний API, SSH или локальную модель.
-- `app/modules/calls/mock_runtime.py` заменить на адаптер коллеги для звонка, TTS/STT и аудиозаписи.
-- БД добавим позже, когда стабилизируем формат результата и сценарий MVP.
-

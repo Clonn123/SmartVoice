@@ -20,4 +20,6 @@ dist/
 build/
 *.egg-info/
 
-data/call_results/
+backend/data/call_results/
+backend/app/modules/telephony/asterisk_config/
+backend/app/modules/telephony/*.log
