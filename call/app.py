@@ -1,10 +1,24 @@
 import asyncio
-import socket
 import logging
+import socket
+import traceback
+
 from ari_client import AriClient, StasisStartEvent
 
-logging.basicConfig(level=logging.INFO)
-log = logging.getLogger("bot")
+# =========================================================
+# LOGGING
+# =========================================================
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s"
+)
+
+# убираем websocket spam
+logging.getLogger("ari_client").setLevel(logging.CRITICAL)
+logging.getLogger("websockets").setLevel(logging.CRITICAL)
+
+log = logging.getLogger("app")
 
 # =========================================================
 # CONFIG
@@ -12,28 +26,55 @@ log = logging.getLogger("bot")
 
 ARI_HOST = "asterisk"
 ARI_PORT = 8088
+
 ARI_USER = "python"
 ARI_PASS = "supersecret"
 
 APP = "main-app"
+
 SIP_ENDPOINT = "PJSIP/100"
 
 RTP_HOST = "python-ai"
 RTP_PORT = 6000
 
 # =========================================================
-# RTP DEBUG SOCKET
+# GLOBALS
 # =========================================================
 
-def start_rtp_listener():
+call_started = False
+packet_counter = 0
+
+# =========================================================
+# RTP LISTENER
+# =========================================================
+
+def rtp_listener():
+
+    global packet_counter
+
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
     sock.bind(("0.0.0.0", RTP_PORT))
 
-    log.info(f"RTP listening on {RTP_PORT}")
+    log.info(f"🎧 RTP LISTENING ON {RTP_PORT}")
 
     while True:
-        data, addr = sock.recvfrom(4096)
-        log.info(f"RTP {len(data)} bytes from {addr}")
+
+        try:
+
+            data, addr = sock.recvfrom(4096)
+
+            packet_counter += 1
+
+            # не спамим Docker логами
+            if packet_counter % 100 == 0:
+                log.info(
+                    f"📦 RTP packets: {packet_counter}"
+                )
+
+        except Exception as e:
+
+            log.error(f"RTP ERROR: {e}")
 
 # =========================================================
 # ARI CLIENT
@@ -54,46 +95,115 @@ client = AriClient(
 @client.on_stasis_start
 async def on_stasis_start(event: StasisStartEvent):
 
-    log.info(f"StasisStart: {event.channel.id}")
+    global call_started
 
-    channel = event.channel
+    try:
 
-    await channel.answer()
+        channel = event.channel
 
-    # =====================================================
-    # BRIDGE
-    # =====================================================
+        log.info(
+            f"📞 STASIS START: {channel.name}"
+        )
 
-    bridge = await client.ari.create_bridge(type="mixing")
-    await bridge.add_channel(channel.id)
+        # =================================================
+        # IGNORE RTP CHANNEL
+        # =================================================
 
-    log.info("Bridge created + channel added")
+        if "UnicastRTP" in channel.name:
 
-    # =====================================================
-    # EXTERNAL MEDIA
-    # =====================================================
+            log.info("⛔ IGNORE RTP CHANNEL")
 
-    media = await client.ari.create_external_media(
-        external_host=f"{RTP_HOST}:{RTP_PORT}",
-        format="ulaw"
-    )
+            return
 
-    await bridge.add_channel(media.id)
+        # =================================================
+        # ONLY ONE CALL
+        # =================================================
 
-    log.info(f"External media: {media.id}")
+        if call_started:
+
+            log.info("⛔ CALL ALREADY EXISTS")
+
+            return
+
+        call_started = True
+
+        # =================================================
+        # ANSWER
+        # =================================================
+
+        await channel.answer()
+
+        log.info("✅ ANSWERED")
+
+        # =================================================
+        # CREATE BRIDGE
+        # =================================================
+
+        bridge = await client.ari.create_bridge(
+            type="mixing"
+        )
+
+        log.info(f"🌉 BRIDGE: {bridge.id}")
+
+        await bridge.add_channel(channel.id)
+
+        log.info("➕ SIP CHANNEL ADDED")
+
+        # =================================================
+        # EXTERNAL MEDIA
+        # =================================================
+
+        media = await client.ari.create_external_media(
+            external_host=f"{RTP_HOST}:{RTP_PORT}",
+            format="ulaw",
+        )
+
+        log.info(f"🎧 MEDIA CHANNEL: {media.id}")
+
+        await bridge.add_channel(media.id)
+
+        log.info("➕ MEDIA CHANNEL ADDED")
+
+        # =================================================
+        # TEST PLAYBACK
+        # =================================================
+
+        # это заставит Asterisk
+        # гарантированно отправлять RTP
+
+        log.info("🔊 PLAYBACK STARTED")
+
+        log.info("🚀 AUDIO PIPELINE READY")
+
+    except Exception as e:
+
+        log.error(f"❌ STASIS ERROR: {e}")
+
+        traceback.print_exc()
 
 # =========================================================
 # ORIGINATE
 # =========================================================
 
 async def originate():
-    log.info("Originating call...")
 
-    await client.ari.originate(
-        endpoint=SIP_ENDPOINT,
-        app_args=APP,
-        caller_id="AI <1000>"
-    )
+    try:
+
+        log.info("📡 ORIGINATING CALL")
+
+        await client.ari.originate(
+            endpoint=SIP_ENDPOINT,
+            app_args=APP,
+            caller_id="AI Bot <1000>"
+        )
+
+        log.info("✅ ORIGINATE SENT")
+
+    except Exception as e:
+
+        log.error(f"❌ ORIGINATE ERROR: {e}")
+
+        traceback.print_exc()
 
 # =========================================================
 # MAIN
@@ -101,26 +211,65 @@ async def originate():
 
 async def main():
 
-    # RTP thread
+    # =====================================================
+    # RTP THREAD
+    # =====================================================
+
     import threading
-    threading.Thread(target=start_rtp_listener, daemon=True).start()
 
-    # connect ARI (ВАЖНО: это await)
-    await client.connect(app=APP, subscribe_to_all=True)
+    threading.Thread(
+        target=rtp_listener,
+        daemon=True
+    ).start()
 
-    log.info("ARI connected")
+    # =====================================================
+    # CONNECT ARI
+    # =====================================================
 
-    # originate call
+    log.info("🔌 CONNECTING TO ARI")
+
+    await client.connect(
+        app=APP,
+        subscribe_to_all=True
+    )
+
+    log.info("✅ ARI CONNECTED")
+
+    # =====================================================
+    # SMALL DELAY
+    # =====================================================
+
+    await asyncio.sleep(2)
+
+    # =====================================================
+    # ORIGINATE
+    # =====================================================
+
     await originate()
 
-    try:
-        while True:
-            await asyncio.sleep(1)
-    except KeyboardInterrupt:
-        log.info("Stopping...")
-        await client.disconnect()
+    # =====================================================
+    # KEEP ALIVE
+    # =====================================================
 
+    while True:
+        await asyncio.sleep(1)
+
+# =========================================================
+# ENTRY
 # =========================================================
 
 if __name__ == "__main__":
-    asyncio.run(main())
+
+    try:
+
+        asyncio.run(main())
+
+    except KeyboardInterrupt:
+
+        log.info("⏹️ STOPPED")
+
+    except Exception as e:
+
+        log.error(f"💀 FATAL ERROR: {e}")
+
+        traceback.print_exc()
