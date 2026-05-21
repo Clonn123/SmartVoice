@@ -1,10 +1,15 @@
 import asyncio
 import logging
 import socket
+import time
 import traceback
-
+import audioop
+import wave
 from ari_client import AriClient, StasisStartEvent
-
+import numpy as np
+import queue
+import threading
+from faster_whisper import WhisperModel
 # =========================================================
 # LOGGING
 # =========================================================
@@ -44,13 +49,42 @@ RTP_PORT = 6000
 call_started = False
 packet_counter = 0
 
+
+model = WhisperModel(
+    "small",
+    device="cpu",
+    compute_type="int8"
+)
+
+audio_queue = queue.Queue()
+
+stream_buffer = bytearray()
+lock = threading.Lock()
+
+sample_rate = 8000
+channels = 1
+sampwidth = 2
+OUTPUT_FILE = "call.wav"
+
+wav_file = wave.open(OUTPUT_FILE, "wb")
+wav_file.setnchannels(channels)
+wav_file.setsampwidth(sampwidth)
+wav_file.setframerate(sample_rate)
+# =====================
+# RTP PARSER
+# =====================
+
+def strip_rtp(pkt):
+    return pkt[12:]  # RTP header remove
+
+
+def pcmu_to_pcm(data):
+    return audioop.ulaw2lin(data, 2)
 # =========================================================
 # RTP LISTENER
 # =========================================================
 
 def rtp_listener():
-
-    global packet_counter
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
@@ -62,19 +96,64 @@ def rtp_listener():
 
         try:
 
-            data, addr = sock.recvfrom(4096)
+            pkt, _ = sock.recvfrom(2048)
 
-            packet_counter += 1
-
-            # не спамим Docker логами
-            if packet_counter % 100 == 0:
-                log.info(
-                    f"📦 RTP packets: {packet_counter}"
-                )
+            payload = strip_rtp(pkt)
+            pcm = pcmu_to_pcm(payload)
+            wav_file.writeframes(pcm)
 
         except Exception as e:
 
             log.error(f"RTP ERROR: {e}")
+
+def buffer_worker():
+    global stream_buffer
+
+    while True:
+        pcm = audio_queue.get()
+
+        with lock:
+            stream_buffer.extend(pcm)
+
+            # keep last ~5 seconds only (8000 Hz, 16-bit mono)
+            max_bytes = 8000 * 2 * 5
+            if len(stream_buffer) > max_bytes:
+                stream_buffer = stream_buffer[-max_bytes:]
+
+# =====================
+# THREAD 3 - STREAMING STT
+# =====================
+
+def stt_worker():
+    global stream_buffer
+
+    last_offset = 0
+
+    log.info("🧠 STT streaming started")
+
+    while True:
+        time.sleep(0.4)  # realtime chunk window (~400ms)
+
+        with lock:
+            if len(stream_buffer) < 8000 * 2:  # <1 sec audio
+                continue
+
+            audio_copy = bytes(stream_buffer)
+
+        audio_np = np.frombuffer(audio_copy, dtype=np.int16).astype(np.float32) / 32768.0
+
+        segments, _ = model.transcribe(
+            audio_np,
+            language="ru",
+            beam_size=1,
+            vad_filter=False,  # IMPORTANT: we do streaming ourselves
+            condition_on_previous_text=True
+        )
+
+        text = "".join([s.text for s in segments]).strip()
+
+        if text:
+            log.info(f"🧠 LIVE: {text}")
 
 # =========================================================
 # ARI CLIENT
@@ -179,7 +258,7 @@ async def on_stasis_start(event: StasisStartEvent):
 
         log.error(f"❌ STASIS ERROR: {e}")
 
-        traceback.print_exc()
+        traceback.log.info_exc()
 
 # =========================================================
 # ORIGINATE
@@ -203,7 +282,7 @@ async def originate():
 
         log.error(f"❌ ORIGINATE ERROR: {e}")
 
-        traceback.print_exc()
+        traceback.log.info_exc()
 
 # =========================================================
 # MAIN
@@ -221,7 +300,8 @@ async def main():
         target=rtp_listener,
         daemon=True
     ).start()
-
+    # threading.Thread(target=buffer_worker, daemon=True).start()
+    # threading.Thread(target=stt_worker, daemon=True).start()
     # =====================================================
     # CONNECT ARI
     # =====================================================
@@ -272,4 +352,4 @@ if __name__ == "__main__":
 
         log.error(f"💀 FATAL ERROR: {e}")
 
-        traceback.print_exc()
+        traceback.log.info_exc()
