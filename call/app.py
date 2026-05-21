@@ -1,164 +1,126 @@
-import time
+import asyncio
 import socket
-import threading
-import .ari_client
+import logging
+from ari_client import AriClient, StasisStartEvent
+
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger("bot")
 
 # =========================================================
 # CONFIG
 # =========================================================
 
-ARI_URL = "http://asterisk:8088"
+ARI_HOST = "asterisk"
+ARI_PORT = 8088
 ARI_USER = "python"
 ARI_PASS = "supersecret"
 
 APP = "main-app"
-
 SIP_ENDPOINT = "PJSIP/100"
 
-RTP_IP = "0.0.0.0"
+RTP_HOST = "python-ai"
 RTP_PORT = 6000
 
 # =========================================================
-# GLOBAL STATE
+# RTP DEBUG SOCKET
 # =========================================================
 
-client = None
-bridge = None
-call_channel = None
-media_channel = None
-call_started = False
-
-# =========================================================
-# RTP LISTENER (PURE DEBUG)
-# =========================================================
-
-def rtp_loop():
+def start_rtp_listener():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.bind((RTP_IP, RTP_PORT))
+    sock.bind(("0.0.0.0", RTP_PORT))
 
-    print(f"[RTP] listening on {RTP_IP}:{RTP_PORT}")
+    log.info(f"RTP listening on {RTP_PORT}")
 
     while True:
         data, addr = sock.recvfrom(4096)
-
-        print(f"[RTP] packet {len(data)} bytes from {addr}")
+        log.info(f"RTP {len(data)} bytes from {addr}")
 
 # =========================================================
-# STASIS HANDLER
+# ARI CLIENT
 # =========================================================
 
-def on_stasis_start(channel, event):
+client = AriClient(
+    host=ARI_HOST,
+    port=ARI_PORT,
+    ari_user=ARI_USER,
+    ari_password=ARI_PASS,
+    tls_enabled=False
+)
 
-    global bridge, call_channel, media_channel, call_started
+# =========================================================
+# STASIS START
+# =========================================================
 
-    name = channel.json.get("name", "")
+@client.on_stasis_start
+async def on_stasis_start(event: StasisStartEvent):
 
-    print(f"\n📞 STASIS START: {name}")
+    log.info(f"StasisStart: {event.channel.id}")
 
-    # ignore media channel
-    if "UnicastRTP" in name:
-        print("⛔ ignoring RTP channel")
-        return
+    channel = event.channel
 
-    if call_started:
-        print("⛔ call already running")
-        return
-
-    call_started = True
-    call_channel = channel
-
-    # =====================================================
-    # ANSWER CALL
-    # =====================================================
-
-    print("📲 answering call")
-    channel.answer()
+    await channel.answer()
 
     # =====================================================
-    # CREATE BRIDGE
+    # BRIDGE
     # =====================================================
 
-    print("🌉 creating bridge")
-    bridge = client.bridges.create(type="mixing")
+    bridge = await client.ari.create_bridge(type="mixing")
+    await bridge.add_channel(channel.id)
 
-    bridge.addChannel(channel=channel.id)
-
-    print("➕ SIP added to bridge")
+    log.info("Bridge created + channel added")
 
     # =====================================================
     # EXTERNAL MEDIA
     # =====================================================
 
-    print("🎧 creating external media")
-
-    media_channel = client.channels.externalMedia(
-        app=APP,
-        external_host=f"python-ai:{RTP_PORT}",
+    media = await client.ari.create_external_media(
+        external_host=f"{RTP_HOST}:{RTP_PORT}",
         format="ulaw"
     )
 
-    bridge.addChannel(channel=media_channel.id)
+    await bridge.add_channel(media.id)
 
-    print("➕ media added")
-
-    print("\n🚀 AUDIO PIPELINE READY\n")
+    log.info(f"External media: {media.id}")
 
 # =========================================================
-# ORIGINATE CALL
+# ORIGINATE
 # =========================================================
 
-def originate_call():
+async def originate():
+    log.info("Originating call...")
 
-    print("📡 originating call...")
-
-    try:
-        client.channels.originate(
-            endpoint=SIP_ENDPOINT,
-            app=APP,
-            callerId="AI Bot <1000>"
-        )
-
-        print("✅ originate sent")
-
-    except Exception as e:
-        print("❌ originate error:", e)
+    await client.ari.originate(
+        endpoint=SIP_ENDPOINT,
+        app_args=APP,
+        caller_id="AI <1000>"
+    )
 
 # =========================================================
 # MAIN
 # =========================================================
 
-def main():
+async def main():
 
-    global client
+    # RTP thread
+    import threading
+    threading.Thread(target=start_rtp_listener, daemon=True).start()
 
-    print("🔌 connecting to ARI...")
+    # connect ARI (ВАЖНО: это await)
+    await client.connect(app=APP, subscribe_to_all=True)
 
-    client = ari_client.connect(
-        ARI_URL,
-        ARI_USER,
-        ARI_PASS
-    )
+    log.info("ARI connected")
 
-    print("✅ connected")
+    # originate call
+    await originate()
 
-    # register event
-    client.on_event("StasisStart", on_stasis_start)
-
-    # start RTP thread
-    threading.Thread(target=rtp_loop, daemon=True).start()
-
-    # small delay
-    time.sleep(2)
-
-    # start call
-    originate_call()
-
-    print("🚀 running event loop")
-
-    client.run(apps=APP)
-
+    try:
+        while True:
+            await asyncio.sleep(1)
+    except KeyboardInterrupt:
+        log.info("Stopping...")
+        await client.disconnect()
 
 # =========================================================
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
