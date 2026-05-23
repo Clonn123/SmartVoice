@@ -30,12 +30,43 @@ services:
       # Логи
       - ./asterisk_log:/var/log/asterisk
 
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    networks:
+      - voip-net
+
+  # ======================================================
+  # PYTHON AI / RTP
+  # ======================================================
+
+  python-ai:
+    build:
+      context: ./call
+
+    container_name: python-ai
+
+    restart: unless-stopped
+
+    depends_on:
+      - asterisk
+
+    working_dir: /app
+
+    command: python app.py
+
+    volumes:
+      # LIVE CODE MOUNT
+      - ./call:/app
+
+    ports:
+      # optional debug port
+      - "6000:6000/udp"
 
     networks:
-      - asterisk_net
+      - voip-net
+
+# =========================================================
+# NETWORK
+# =========================================================
 
 networks:
-  asterisk_net:
+  voip-net:
     driver: bridge
