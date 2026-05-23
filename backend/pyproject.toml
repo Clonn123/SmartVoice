@@ -3,7 +3,7 @@ name = "smartvoice"
 version = "0.1.0"
 description = "FastAPI MVP base for a single-route AI call-center flow."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 dependencies = [
     "fastapi>=0.115.0",
     "pydantic>=2.8.0",
@@ -26,7 +26,7 @@ dev = [
 
 [tool.ruff]
 line-length = 100
-target-version = "py311"
+target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]

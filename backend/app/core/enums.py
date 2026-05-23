@@ -1,6 +1,12 @@
 ﻿from __future__ import annotations
+from enum import Enum
 
-from enum import StrEnum
+try:
+    # Python 3.11+ provides StrEnum
+    from enum import StrEnum  # type: ignore
+except Exception:
+    class StrEnum(str, Enum):
+        pass
 
 
 class CallJobStatus(StrEnum):
