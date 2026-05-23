@@ -1,8 +1,9 @@
 ﻿from __future__ import annotations
 
 from functools import lru_cache
+from pathlib import Path
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -12,7 +13,7 @@ class Settings(BaseSettings):
     debug: bool = Field(default=True, validation_alias="APP_DEBUG")
     log_level: str = "INFO"
 
-    result_storage_dir: str = "data/call_results"
+    result_storage_dir: Path = Path("data/call_results")
 
     llm_provider: str = "mock"
     llm_model: str | None = None
@@ -43,7 +44,19 @@ class Settings(BaseSettings):
     )
     max_dialogue_turns: int = Field(default=6, ge=1)
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=str(Path(__file__).resolve().parents[2] / ".env"),
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+    @field_validator("result_storage_dir", mode="before")
+    @classmethod
+    def _resolve_result_storage_dir(cls, value: str | Path) -> Path:
+        path = Path(value)
+        if path.is_absolute():
+            return path
+        return Path(__file__).resolve().parents[2] / path
 
 
 @lru_cache

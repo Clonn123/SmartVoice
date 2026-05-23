@@ -38,11 +38,21 @@ MVP-сценарий сейчас — напоминание или уточне
 
 ```powershell
 cd backend
-python -m venv .venv
+py -3.10 -m venv .venv
 \.venv\Scripts\Activate.ps1
 pip install -e ".[dev]"
 uvicorn app.main:app --reload
 ```
+
+Важно: окружение создаём именно на Python 3.10. Если у вас несколько версий Python, используйте `py -3.10`, а не `python`, чтобы не получить случайно другое окружение.
+
+### Точка входа
+
+Центральная точка входа в приложение — `backend/app/main.py`.
+Именно там создаётся объект FastAPI `app`, подключаются маршруты и настраивается логирование.
+
+Маршрутизация API собирается в `backend/app/api/router.py`, а основная оркестрация обзвона находится в `backend/app/modules/calls/service.py`.
+То есть при запуске через `uvicorn app.main:app --reload` стартует приложение из `main.py`, а дальше запросы проходят через роутер в сервис обзвона.
 
 Адреса:
 

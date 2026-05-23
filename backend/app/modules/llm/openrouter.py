@@ -93,6 +93,9 @@ class OpenRouterLlmGateway:
                     "detected_ending": finish_call,
                 },
             )
+        except httpx.ConnectError as exc:
+            logger.exception("Не удалось подключиться к OpenRouter: проверьте сеть и DNS")
+            raise RuntimeError("Не удалось подключиться к OpenRouter: проверьте сеть и DNS") from exc
         except httpx.HTTPStatusError as exc:
             logger.exception(
                 "Ошибка API OpenRouter",
@@ -158,6 +161,11 @@ class OpenRouterLlmGateway:
                     "finish_reason": data["choices"][0].get("finish_reason"),
                 },
             )
+        except httpx.ConnectError as exc:
+            logger.exception("Не удалось подключиться к OpenRouter при создании резюме: проверьте сеть и DNS")
+            raise RuntimeError(
+                "Не удалось подключиться к OpenRouter при создании резюме: проверьте сеть и DNS"
+            ) from exc
         except httpx.HTTPStatusError as exc:
             logger.exception(
                 "Ошибка API OpenRouter при создании резюме",
@@ -174,14 +182,6 @@ class OpenRouterLlmGateway:
     async def close(self) -> None:
         """Закрывает HTTP клиент."""
         await self.client.aclose()
-
-    def __del__(self) -> None:
-        """Очистка при удалении объекта."""
-        try:
-            import asyncio
-            asyncio.run(self.close())
-        except Exception:
-            pass
 
     @staticmethod
     def _build_messages(context: LlmCallContext) -> list[dict[str, str]]:
