@@ -3,14 +3,28 @@ name = "smartvoice"
 version = "0.1.0"
 description = "FastAPI MVP base for a single-route AI call-center flow."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.11"
 dependencies = [
-    "fastapi>=0.115.0",
-    "pydantic>=2.8.0",
-    "pydantic-settings>=2.4.0",
-    "uvicorn[standard]>=0.30.0",
-    "httpx>=0.27.0",
-    "vosk>=0.3.45",
+    "fastapi",
+    "pydantic",
+    "pydantic-settings",
+    "uvicorn[standard]",
+    "httpx",
+    "vosk",
+    "ari_client",
+    "requests==2.31.0",
+    "setuptools==69.0.3",
+    "webrtcvad",
+    "numpy",
+    "scipy",
+    "sqlalchemy",
+    "celery",
+    "asyncpg",
+    "redis",
+    "faster-whisper",
+    "edge-tts",
+    "soundfile",
+    "pydub"
 ]
 
 [tool.setuptools.packages.find]
@@ -19,9 +33,26 @@ exclude = ["tests*"]
 
 [project.optional-dependencies]
 dev = [
-    "httpx>=0.27.0",
-    "pytest>=8.2.0",
-    "pytest-asyncio>=0.23.0",
+    "fastapi",
+    "pydantic",
+    "pydantic-settings",
+    "uvicorn[standard]",
+    "httpx",
+    "vosk",
+    "ari_client",
+    "requests==2.31.0",
+    "setuptools==69.0.3",
+    "webrtcvad",
+    "numpy",
+    "scipy",
+    "sqlalchemy",
+    "celery",
+    "asyncpg",
+    "redis",
+    "faster-whisper",
+    "edge-tts",
+    "soundfile",
+    "pydub"
 ]
 
 [tool.ruff]
