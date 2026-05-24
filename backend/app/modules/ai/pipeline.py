@@ -8,6 +8,7 @@ import audioop
 
 from app.modules.ai.stt import VoskSTT
 from app.modules.ai.vad import VADDetector
+from app.core.config import config
 from app.modules.ai.tts import TTSService
 
 
@@ -24,8 +25,8 @@ class RealtimePipeline:
         # ==========================================
 
         self.stt = VoskSTT(
-            "models/vosk-model-ru-0.42",
-            16000
+            config.VOSK_MODEL_PATH,
+            config.VOSK_SAMPLE_RATE
         )
 
         # ==========================================
