@@ -19,10 +19,19 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
 
     result_storage_dir: Path = Field(default=Path("data/call_results"))
+    recordings_dir: Path = Field(default=Path("data/call_recordings"))
 
     @field_validator("result_storage_dir", mode="before")
     @classmethod
     def _resolve_result_storage_dir(cls, value: str | Path) -> Path:
+        path = Path(value)
+        if path.is_absolute():
+            return path
+        return Path(__file__).resolve().parents[2] / path
+
+    @field_validator("recordings_dir", mode="before")
+    @classmethod
+    def _resolve_recordings_dir(cls, value: str | Path) -> Path:
         path = Path(value)
         if path.is_absolute():
             return path

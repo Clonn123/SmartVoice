@@ -36,3 +36,6 @@ async def register_handlers(ari, caller):
         )
         await ctx.bridge.add_channel(channel_id=media.id)
         ctx.rtp_session.remote_addr = ctx.remote_addr
+
+        if caller.pipeline:
+            caller.pipeline._queue_opening_greeting()

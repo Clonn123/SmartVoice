@@ -6,6 +6,7 @@ from app.modules.telephony.handlers import register_handlers
 from app.modules.telephony.main import AriService
 from app.modules.calls.runtime import get_call_runtime_gateway
 from app.core.config import get_settings
+from app.modules.llm.factory import get_llm_gateway
 
 
 logger = logging.getLogger(__name__)
@@ -31,6 +32,17 @@ async def init_telephony(app):
             settings.vosk_model_path,
             settings.vosk_sample_rate,
         )
+
+    # Попытка создать LLM-шлюз и выставить флаг готовности
+    try:
+        llm_gateway = get_llm_gateway()
+        app.state.llm = llm_gateway
+        app.state.llm_ready = True
+        logger.info("LLM gateway initialized at startup: provider=%s", settings.llm_provider)
+    except Exception as exc:  # pragma: no cover - best-effort initialization
+        app.state.llm = None
+        app.state.llm_ready = False
+        logger.warning("LLM gateway initialization failed: %s", exc)
 
     ari = ari_service.get()
 

@@ -19,6 +19,7 @@ from app.modules.calls.schemas import (
 from app.repository import FileCallResultRepository
 from app.modules.llm.base import CallMessage, LlmCallContext
 from app.modules.llm.factory import get_llm_gateway
+from app.modules.llm.context import build_call_context
 
 logger = logging.getLogger(__name__)
 
@@ -273,7 +274,7 @@ class CallService:
         history: list[CallMessage],
         metadata: dict[str, Any],
     ) -> LlmCallContext:
-        return LlmCallContext(
+        return build_call_context(
             prompt=prompt,
             scenario=scenario,
             target=target_payload,

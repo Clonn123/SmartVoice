@@ -6,6 +6,7 @@ import struct
 import time
 
 from app.core.config import config
+from app.modules.llm.context import DEFAULT_REALTIME_PROMPT, DEFAULT_REALTIME_SCENARIO
 
 
 class CallContext:
@@ -15,6 +16,11 @@ class CallContext:
         self.rtp_session = None
         self.remote_addr = None  
         self.active = False
+        self.llm_prompt = DEFAULT_REALTIME_PROMPT
+        self.llm_scenario = DEFAULT_REALTIME_SCENARIO
+        self.llm_target = None
+        self.llm_metadata = {}
+        self.llm_opening_reply = None
 
 
 class RTPSession:
