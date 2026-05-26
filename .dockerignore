@@ -1,0 +1,19 @@
+.git
+.venv
+.pytest_cache
+.ruff_cache
+.mypy_cache
+__pycache__
+*.py[cod]
+*.log
+.env
+dist
+build
+*.egg-info
+
+# Local runtime data and logs
+asterisk_log
+data
+
+# Keep the Vosk model out of the image; it is mounted at runtime in docker-compose.
+backend/models

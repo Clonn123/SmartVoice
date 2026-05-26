@@ -5,6 +5,7 @@ import audioop
 import threading
 import queue
 import tempfile
+import time
 
 import edge_tts
 import asyncio
@@ -24,6 +25,8 @@ class TTSService:
         self.voice = "ru-RU-DmitryNeural"
 
         self.tts_queue = queue.Queue()
+        self.playback_finished = threading.Event()
+        self.playback_finished.set()
 
         self.running = False
         self.is_speaking = False
@@ -52,6 +55,7 @@ class TTSService:
         if not text.strip():
             return
 
+        self.playback_finished.clear()
         self.tts_queue.put(text)
 
     # =====================================================
@@ -86,12 +90,15 @@ class TTSService:
                 self._speak(text)
 
                 self.is_speaking = False
+                self.playback_finished.set()
 
             except queue.Empty:
                 continue
 
             except Exception as e:
                 print("TTS ERROR:", e)
+                self.is_speaking = False
+                self.playback_finished.set()
 
     # =====================================================
     # SPEAK
@@ -104,6 +111,7 @@ class TTSService:
         )
 
         self._push_wav_to_queue(wav_path)
+        self._wait_for_rtp_flush()
 
     # =====================================================
     # EDGE-TTS -> WAV
@@ -182,3 +190,20 @@ class TTSService:
                 )
 
         print("✅ TTS FINISHED")
+
+    # =====================================================
+    # WAIT RTP FLUSH
+    # =====================================================
+
+    def _wait_for_rtp_flush(self):
+
+        started = time.time()
+
+        while self.running and time.time() - started < 10:
+
+            if self.rtp.outbound_audio.empty():
+                time.sleep(0.3)
+                if self.rtp.outbound_audio.empty():
+                    return
+
+            time.sleep(0.05)

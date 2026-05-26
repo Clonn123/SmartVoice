@@ -21,5 +21,7 @@ build/
 *.egg-info/
 
 backend/data/call_results/
+backend/data/call_recordings/
 backend/app/modules/telephony/asterisk_config/
 backend/app/modules/telephony/*.log
+backend/models/

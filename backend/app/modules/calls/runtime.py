@@ -1,10 +1,15 @@
 ﻿from __future__ import annotations
 
+import logging
+from functools import lru_cache
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
 from app.core.config import get_settings
 from app.core.enums import CallAttemptStatus
+
+
+logger = logging.getLogger(__name__)
 
 
 class CallRuntimeError(Exception):
@@ -73,20 +78,28 @@ class CallRuntimeGateway(Protocol):
         raise NotImplementedError
 
 
+@lru_cache(maxsize=1)
 def get_call_runtime_gateway() -> CallRuntimeGateway:
     settings = get_settings()
     if settings.call_runtime_provider == "mock":
         from app.modules.calls.mock_runtime import MockCallRuntimeGateway
 
+        logger.info("Call runtime gateway initialized: provider=mock")
         return MockCallRuntimeGateway()
     if settings.call_runtime_provider == "vosk":
         from app.modules.calls.vosk_runtime import VoskCallRuntimeGateway
 
-        return VoskCallRuntimeGateway(
+        gateway = VoskCallRuntimeGateway(
             model_path=settings.vosk_model_path,
             sample_rate=settings.vosk_sample_rate,
             fallback_text=settings.vosk_fallback_text,
             test_audio_path=settings.vosk_test_audio_path,
         )
+        logger.info(
+            "Call runtime gateway initialized: provider=vosk model_path=%s sample_rate=%s",
+            settings.vosk_model_path,
+            settings.vosk_sample_rate,
+        )
+        return gateway
     raise ValueError(f"Unsupported call runtime provider: {settings.call_runtime_provider}")
 
