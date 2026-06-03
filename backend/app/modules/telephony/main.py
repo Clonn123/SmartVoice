@@ -13,10 +13,7 @@ class AriService:
         )
 
     async def connect(self):
-        await self.client.connect(
-            app=config.ARI_APP,
-            subscribe_to_all=True
-        )
+        await self.client.connect(app=config.ARI_APP, subscribe_to_all=True)
 
     def get(self):
         return self.client

@@ -3,16 +3,11 @@ import time
 
 class LLMService:
 
-    def stream(
-        self,
-        text: str
-    ):
+    def stream(self, text: str):
 
         print(f"[USER]: {text}")
 
-        response = (
-            "Здравствуйте чем могу помочь вам сегодня"
-        )
+        response = "Здравствуйте чем могу помочь вам сегодня"
 
         words = response.split()
 

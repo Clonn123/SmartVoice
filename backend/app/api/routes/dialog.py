@@ -1,4 +1,5 @@
 """Роуты для тестирования диалога с LLM."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -15,12 +16,14 @@ router = APIRouter(tags=["dialog"])
 
 class DialogMessage(BaseModel):
     """Одно сообщение в диалоге."""
+
     role: str = Field(..., description="Роль: 'bot' или 'client'")
     content: str = Field(..., description="Текст сообщения")
 
 
 class DialogRequest(BaseModel):
     """Запрос для диалога с LLM."""
+
     prompt: str = Field(
         ...,
         description="Основной промпт/сценарий для ИИ",
@@ -49,6 +52,7 @@ class DialogRequest(BaseModel):
 
 class DialogResponse(BaseModel):
     """Ответ с сообщением бота."""
+
     bot_message: str = Field(..., description="Ответ бота")
     finish_call: bool = Field(..., description="Должен ли завершиться звонок")
     history: list[DialogMessage] = Field(
@@ -61,10 +65,10 @@ class DialogResponse(BaseModel):
 async def dialog(request: DialogRequest) -> DialogResponse:
     """
     Диалог с LLM для тестирования.
-    
+
     Если `client_message` не передан или None → генерируется первое сообщение бота.
     Если `client_message` передан → добавляется в историю и генерируется ответ бота.
-    
+
     Пример 1 (первое сообщение):
     ```json
     {
@@ -79,7 +83,7 @@ async def dialog(request: DialogRequest) -> DialogResponse:
         }
     }
     ```
-    
+
     Пример 2 (продолжение):
     ```json
     {
@@ -100,17 +104,16 @@ async def dialog(request: DialogRequest) -> DialogResponse:
     ```
     """
     service = CallService()
-    
+
     # Собираем историю сообщений из переданного массива
     call_history: list[CallMessage] = [
-        CallMessage(role=msg.role, content=msg.content)
-        for msg in request.history
+        CallMessage(role=msg.role, content=msg.content) for msg in request.history
     ]
-    
+
     # Если передано сообщение клиента, добавляем его в историю
     if request.client_message:
         call_history.append(CallMessage(role="client", content=request.client_message))
-    
+
     # Подготавливаем данные клиента
     target_payload = {
         "phone_number": request.target.phone_number,
@@ -121,7 +124,7 @@ async def dialog(request: DialogRequest) -> DialogResponse:
         "external_id": request.target.external_id,
         **(request.target.payload or {}),  # Добавляем дополнительные данные
     }
-    
+
     # Строим контекст для LLM
     context = LlmCallContext(
         prompt=request.prompt,
@@ -130,14 +133,16 @@ async def dialog(request: DialogRequest) -> DialogResponse:
         history=call_history,
         extra_context=request.metadata,
     )
-    
+
     # Генерируем ответ от LLM
     reply = await service.llm.generate_reply(context)
-    
+
     # Добавляем ответ бота в историю
-    updated_history = [DialogMessage(role=msg.role, content=msg.content) for msg in call_history]
+    updated_history = [
+        DialogMessage(role=msg.role, content=msg.content) for msg in call_history
+    ]
     updated_history.append(DialogMessage(role="bot", content=reply.message))
-    
+
     return DialogResponse(
         bot_message=reply.message,
         finish_call=reply.finish_call,

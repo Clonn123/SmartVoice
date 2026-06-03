@@ -37,11 +37,11 @@ services:
   # PYTHON AI / RTP
   # ======================================================
 
-  python-ai:
+  smartvoice:
     build:
       context: ./
-
-    container_name: python-ai
+    image: smartvoice:latest
+    container_name: smart_voice
 
     restart: unless-stopped
 
@@ -50,15 +50,14 @@ services:
 
     working_dir: /smartvoice
 
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    
     volumes:
       # LIVE CODE MOUNT
       - ./backend:/smartvoice
+      - ./modules/vosk-model-ru-0.42:/smartvoice/modules/vosk-model-ru-0.42
 
     ports:
-      # optional debug port
-      - "6000:6000/udp"
       - "8000:8000"
 
 
@@ -73,9 +72,8 @@ services:
   # CELERY WORKER
   # =======================================================
   celery-worker:
-    build:
-      context: ./
-
+    image: smartvoice:latest
+  
     container_name: celery-worker
     restart: unless-stopped
 
@@ -83,17 +81,19 @@ services:
       - redis
       - postgres
 
-    working_dir: /smartvoice
-
-    command: celery -A app.core.celery worker --loglevel=info
-
-    volumes:
-      - ./backend:/smartvoice
+    command: celery -A app.core.celery worker -l info --concurrency=1
 
     environment:
       DATABASE_URL: postgresql+asyncpg://smartvoice_admin:1qp21qp2@postgres:5432/smartvoice
       REDIS_URL: redis://redis:6379/0
 
+    ports:
+      # optional debug port
+      - "6000:6000/udp"
+
+    volumes:
+      - ./modules/vosk-model-ru-0.42:/smartvoice/modules/vosk-model-ru-0.42
+  
     networks:
       - voip-net
 
@@ -142,3 +142,4 @@ networks:
 
 volumes:
   pg_data:
+

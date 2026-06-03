@@ -21,12 +21,14 @@ class OpenRouterLlmGateway:
             raise ValueError("Требуется API ключ OpenRouter (llm_openrouter_api_key)")
         if not model:
             raise ValueError("Требуется модель OpenRouter (llm_openrouter_model)")
-        
+
         self.api_key = api_key
         self.model = model
         self.timeout_seconds = timeout_seconds
 
-    async def _post(self, *, messages: list[dict[str, str]], temperature: float, max_tokens: int) -> dict:
+    async def _post(
+        self, *, messages: list[dict[str, str]], temperature: float, max_tokens: int
+    ) -> dict:
         async with httpx.AsyncClient(timeout=self.timeout_seconds) as client:
             response = await client.post(
                 f"{OPENROUTER_API_BASE}/chat/completions",
@@ -47,30 +49,30 @@ class OpenRouterLlmGateway:
     async def generate_reply(self, context: LlmCallContext) -> LlmReply:
         """Генерирует ответ бота на основе контекста диалога через OpenRouter API."""
         messages = self._build_messages(context)
-        
+
         logger.info(
             "Запрос к OpenRouter для генерации ответа: модель=%s, ходов=%s",
             self.model,
             len(context.history),
         )
-        
+
         try:
             data = await self._post(messages=messages, temperature=0.7, max_tokens=512)
-            
+
             message = data["choices"][0]["message"]["content"]
             finish_call, message = self._extract_finish_call(message)
             logger.info(
                 "Ответ от OpenRouter получен: использовано токенов=%s",
                 data.get("usage", {}).get("total_tokens", 0),
             )
-            
+
             logger.info(
                 "Ответ LLM: finish_call=%s, длина_ответа=%s, ответ=%s",
                 finish_call,
                 len(message),
                 message[:150],  # Первые 150 символов для отладки
             )
-            
+
             return LlmReply(
                 message=message,
                 finish_call=finish_call,
@@ -83,8 +85,12 @@ class OpenRouterLlmGateway:
                 },
             )
         except httpx.ConnectError as exc:
-            logger.exception("Не удалось подключиться к OpenRouter: проверьте сеть и DNS")
-            raise RuntimeError("Не удалось подключиться к OpenRouter: проверьте сеть и DNS") from exc
+            logger.exception(
+                "Не удалось подключиться к OpenRouter: проверьте сеть и DNS"
+            )
+            raise RuntimeError(
+                "Не удалось подключиться к OpenRouter: проверьте сеть и DNS"
+            ) from exc
         except httpx.HTTPStatusError as exc:
             logger.exception(
                 "Ошибка API OpenRouter",
@@ -111,21 +117,24 @@ class OpenRouterLlmGateway:
 Создай краткое резюме из 1-2 предложений на русском языке, описывающее суть разговора и итоговый результат."""
 
         messages = [
-            {"role": "system", "content": "Ты помощник, который создаёт краткие резюме деловых телефонных разговоров на русском языке."},
+            {
+                "role": "system",
+                "content": "Ты помощник, который создаёт краткие резюме деловых телефонных разговоров на русском языке.",
+            },
             {"role": "user", "content": summary_prompt},
         ]
-        
+
         logger.info("Запрос к OpenRouter для создания резюме: модель=%s", self.model)
-        
+
         try:
             data = await self._post(messages=messages, temperature=0.5, max_tokens=256)
-            
+
             summary_text = data["choices"][0]["message"]["content"]
             logger.info(
                 "Резюме получено от OpenRouter: использовано токенов=%s",
                 data.get("usage", {}).get("total_tokens", 0),
             )
-            
+
             return LlmSummary(
                 text=summary_text,
                 raw_payload={
@@ -137,7 +146,9 @@ class OpenRouterLlmGateway:
                 },
             )
         except httpx.ConnectError as exc:
-            logger.exception("Не удалось подключиться к OpenRouter при создании резюме: проверьте сеть и DNS")
+            logger.exception(
+                "Не удалось подключиться к OpenRouter при создании резюме: проверьте сеть и DNS"
+            )
             raise RuntimeError(
                 "Не удалось подключиться к OpenRouter при создании резюме: проверьте сеть и DNS"
             ) from exc
@@ -168,7 +179,9 @@ class OpenRouterLlmGateway:
         cleaned_message = message.strip()
 
         if FINAL_MARKER in cleaned_message:
-            message_without_marker = cleaned_message.split(FINAL_MARKER, 1)[0].rstrip("\n ")
+            message_without_marker = cleaned_message.split(FINAL_MARKER, 1)[0].rstrip(
+                "\n "
+            )
             return True, message_without_marker.strip()
 
         finish_keywords = [

@@ -5,11 +5,18 @@ from typing import Any
 
 from pydantic import AliasChoices, AnyUrl, BaseModel, ConfigDict, Field
 
-from app.core.enums import CallAttemptStatus, CallJobStatus, CallResult, CallStatus, DialogSpeaker
+from app.core.enums import (
+    CallAttemptStatus,
+    CallJobStatus,
+    CallResult,
+    CallStatus,
+    DialogSpeaker,
+)
 
 
 class CallTargetInput(BaseModel):
     """Данные клиента для проведения звонка."""
+
     model_config = ConfigDict(populate_by_name=True)
 
     phone_number: str = Field(
@@ -52,13 +59,13 @@ class CallTargetInput(BaseModel):
     )
     payload: dict[str, Any] = Field(
         default_factory=dict,
-        description="Дополнительные данные клиента в формате JSON (опционально). Будут передано в контекст LLM. Пример: {\"last_purchase\": \"2024-05-10\"}",
+        description='Дополнительные данные клиента в формате JSON (опционально). Будут передано в контекст LLM. Пример: {"last_purchase": "2024-05-10"}',
     )
 
 
 class ProcessCallsRequest(BaseModel):
     """Запрос на проведение обзвона клиентов."""
-    
+
     model_config = ConfigDict(
         json_schema_extra={
             "examples": [
@@ -81,7 +88,7 @@ class ProcessCallsRequest(BaseModel):
             ]
         }
     )
-    
+
     prompt: str = Field(
         ...,
         min_length=1,
@@ -105,7 +112,7 @@ class ProcessCallsRequest(BaseModel):
     )
     metadata: dict[str, Any] = Field(
         default_factory=dict,
-        description="Дополнительные метаданные для сохранения и отслеживания (опционально). Пример: {\"campaign_id\": \"2024-05-17-promo\", \"source\": \"crm\"}",
+        description='Дополнительные метаданные для сохранения и отслеживания (опционально). Пример: {"campaign_id": "2024-05-17-promo", "source": "crm"}',
     )
     max_attempts: int = Field(
         default=1,
@@ -155,4 +162,3 @@ class ProcessCallsResponse(BaseModel):
     processed_at: datetime
     metadata: dict[str, Any]
     results: list[ProcessedCallResult]
-

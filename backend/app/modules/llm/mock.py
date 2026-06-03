@@ -24,10 +24,16 @@ class MockLlmGateway:
             )
 
         last_client_message = next(
-            (message.content for message in reversed(context.history) if message.role == "client"),
+            (
+                message.content
+                for message in reversed(context.history)
+                if message.role == "client"
+            ),
             "",
         ).lower()
-        finish_call = any(word in last_client_message for word in ("да", "хорошо", "ок", "yes"))
+        finish_call = any(
+            word in last_client_message for word in ("да", "хорошо", "ок", "yes")
+        )
         message = (
             "Спасибо, я зафиксировал ваш ответ. Хорошего дня."
             if finish_call
@@ -55,4 +61,3 @@ class MockLlmGateway:
                 "target": context.target,
             },
         )
-

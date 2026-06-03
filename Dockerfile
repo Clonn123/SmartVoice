@@ -17,4 +17,8 @@ RUN pip install --upgrade pip setuptools wheel
 
 RUN pip install --no-cache-dir .
 
-COPY . .
+RUN apt-get purge -y gcc build-essential \
+    && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY ./backend /smartvoice

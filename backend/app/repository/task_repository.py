@@ -12,8 +12,7 @@ class TaskQueueRepository:
 
     async def _get(self, task_id: str) -> Optional[TaskQueue]:
         result = await self.session.execute(
-            select(TaskQueue).
-            where(TaskQueue.id == task_id)
+            select(TaskQueue).where(TaskQueue.id == task_id)
         )
         return result.scalars().first()
 

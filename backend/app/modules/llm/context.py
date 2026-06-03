@@ -4,7 +4,6 @@ from typing import Any, Iterable
 
 from app.modules.llm.base import CallMessage, LlmCallContext
 
-
 DEFAULT_REALTIME_PROMPT = "Напомни клиенту о договоре и спроси его, помнит ли он о нём. Скажи, что звонишь только напомнить о задолжности, больше не нужно ничего."
 DEFAULT_REALTIME_SCENARIO = "realtime_call"
 FINAL_MARKER = "FINAL"

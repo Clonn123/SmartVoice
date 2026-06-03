@@ -3,7 +3,12 @@
 from urllib.parse import quote
 from uuid import uuid4
 
-from app.modules.calls.runtime import AudioArtifact, CallSession, CustomerAudio, FinishedCall
+from app.modules.calls.runtime import (
+    AudioArtifact,
+    CallSession,
+    CustomerAudio,
+    FinishedCall,
+)
 
 
 class MockCallRuntimeGateway:
@@ -46,5 +51,3 @@ class MockCallRuntimeGateway:
             recording_uri=f"mock://recordings/{call_id}.wav",
             raw_payload={"provider": "mock", "call_id": call_id},
         )
-
-

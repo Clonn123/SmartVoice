@@ -1,25 +1,24 @@
-from sqlalchemy.ext.asyncio import (
-    async_sessionmaker, create_async_engine,
-    AsyncSession
-)
-
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine, AsyncSession
+from sqlalchemy.pool import NullPool
 from app.repository.task_repository import TaskQueueRepository
+from app.repository.call_task_repository import CallTaskRepository
+
+from app.repository.call_attempt_repository import CallAttemptRepository
 from app.core.config import config
 
+URL = (
+    "postgresql+asyncpg://"
+    + f"{config.PG_USER}:{config.PG_PASS}"
+    + "@"
+    + f"{config.PG_HOST}:{config.PG_PORT}"
+    + "/"
+    + f"{config.PG_DB}"
+)
 
-URL = "postgresql+asyncpg://" +\
-      f"{config.PG_USER}:{config.PG_PASS}" +\
-      "@" +\
-      f"{config.PG_HOST}:{config.PG_PORT}" +\
-      "/" +\
-      f"{config.PG_DB}"
 
-
-engine = create_async_engine(url=URL, echo=False)
+engine = create_async_engine(url=URL, echo=False, poolclass=NullPool)
 AsyncSessionFactory = async_sessionmaker(
-    bind=engine,
-    class_=AsyncSession,
-    expire_on_commit=False
+    bind=engine, class_=AsyncSession, expire_on_commit=False
 )
 
 
@@ -30,6 +29,9 @@ class SqlAlchemyUnitOfWork:
     async def __aenter__(self):
         self.session = self.session_factory()
         self.task_queue = TaskQueueRepository(self.session)
+        self.call_tasks = CallTaskRepository(self.session)
+
+        self.call_attempts = CallAttemptRepository(self.session)
         return self
 
     async def __aexit__(self, exc_type, exc_val, traceback):
