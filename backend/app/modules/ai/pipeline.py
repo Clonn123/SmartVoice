@@ -6,7 +6,6 @@ import requests
 import threading
 import time
 import wave
-from datetime import datetime
 from pathlib import Path
 
 from app.core.config import config
@@ -57,6 +56,7 @@ class RealtimePipeline:
         self.closing_message_active = False
 
         self.wav_file = None
+        self.recording_path: str | None = None
 
         self.call_id = (
             getattr(call_context, "call_id", None)
@@ -94,12 +94,15 @@ class RealtimePipeline:
         print(" REALTIME PIPELINE STARTED")
 
     def _open_wav(self):
-        filename = f"record_{datetime.now().strftime('%H_%M_%S')}.wav"
+        task_id = getattr(self.call_context, "call_task_id", None) or "unknown"
+        attempt_id = getattr(self.call_context, "call_attempt_id", None) or "unknown"
+        filename = f"task_{task_id}_attempt_{attempt_id}.wav"
 
         recordings_dir = Path(config.recordings_dir)
         recordings_dir.mkdir(parents=True, exist_ok=True)
 
         recording_path = recordings_dir / filename
+        self.recording_path = str(recording_path)
 
         self.wav_file = wave.open(str(recording_path), "wb")
         self.wav_file.setnchannels(1)
@@ -532,6 +535,9 @@ class RealtimePipeline:
         self._hangup_call()
 
     def _hangup_call(self) -> None:
+        if self.call_context is not None:
+            self.call_context.bot_finished = True
+
         channel_id = getattr(self.call_context, "channel_id", None)
 
         if not channel_id:

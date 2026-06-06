@@ -24,3 +24,12 @@ class CallAttemptRepository:
         await self.session.flush()
 
         return attempt
+
+    async def list_by_call_task_id(self, call_task_id: int) -> list[CallAttempt]:
+        result = await self.session.execute(
+            select(CallAttempt)
+            .where(CallAttempt.call_task_id == call_task_id)
+            .order_by(CallAttempt.attempt_number.asc())
+        )
+
+        return list(result.scalars().all())

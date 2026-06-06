@@ -20,6 +20,7 @@ class CallContext:
 
         self.answered = False
         self.bot_finished = False
+        self.finished = False
         self.hangup_cause = None
         self.hangup_text = None
 
@@ -137,7 +138,6 @@ class RTPSession:
                 packet = self.build_rtp(pcm)
 
                 self.sock.sendto(packet, self.remote_addr)
-
                 time.sleep(0.02)
 
             except queue.Empty:

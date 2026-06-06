@@ -13,10 +13,24 @@ logger = logging.getLogger(__name__)
 
 async def init_base():
     """Создаёт все таблицы, если их нет."""
+    from sqlalchemy import text
+
     from app.repository.unitofwork import engine
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        await conn.execute(
+            text(
+                "ALTER TABLE call_attempts "
+                "ADD COLUMN IF NOT EXISTS dialog_json JSON"
+            )
+        )
+        await conn.execute(
+            text(
+                "ALTER TABLE call_attempts "
+                "ADD COLUMN IF NOT EXISTS recording_path VARCHAR(512)"
+            )
+        )
 
 
 async def init_telephony(app):

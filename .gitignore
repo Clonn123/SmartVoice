@@ -25,3 +25,5 @@ backend/data/call_recordings/
 backend/app/modules/telephony/asterisk_config/
 backend/app/modules/telephony/*.log
 backend/models/
+modules/vosk-model-ru-0.42
+modules/vosk-model-small-ru-0.22

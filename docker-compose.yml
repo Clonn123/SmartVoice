@@ -53,9 +53,9 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     
     volumes:
-      # LIVE CODE MOUNT
       - ./backend:/smartvoice
-      - ./modules/vosk-model-ru-0.42:/smartvoice/modules/vosk-model-ru-0.42
+      - ./backend/data:/smartvoice/data
+      - ./modules/vosk-model-small-ru-0.22:/smartvoice/modules/vosk-model-small-ru-0.22
 
     ports:
       - "8000:8000"
@@ -86,14 +86,18 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://smartvoice_admin:1qp21qp2@postgres:5432/smartvoice
       REDIS_URL: redis://redis:6379/0
+      RTP_HOST: celery-worker
+      RTP_PORT: 6000
 
     ports:
-      # optional debug port
+      # RTP для Asterisk externalMedia
       - "6000:6000/udp"
 
     volumes:
-      - ./modules/vosk-model-ru-0.42:/smartvoice/modules/vosk-model-ru-0.42
-  
+      - ./backend:/smartvoice
+      - ./backend/data:/smartvoice/data
+      - ./modules/vosk-model-small-ru-0.22:/smartvoice/modules/vosk-model-small-ru-0.22
+
     networks:
       - voip-net
 

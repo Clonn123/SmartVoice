@@ -1,8 +1,6 @@
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine, AsyncSession
 from sqlalchemy.pool import NullPool
-from app.repository.task_repository import TaskQueueRepository
 from app.repository.call_task_repository import CallTaskRepository
-
 from app.repository.call_attempt_repository import CallAttemptRepository
 from app.core.config import config
 
@@ -28,7 +26,6 @@ class SqlAlchemyUnitOfWork:
 
     async def __aenter__(self):
         self.session = self.session_factory()
-        self.task_queue = TaskQueueRepository(self.session)
         self.call_tasks = CallTaskRepository(self.session)
 
         self.call_attempts = CallAttemptRepository(self.session)
