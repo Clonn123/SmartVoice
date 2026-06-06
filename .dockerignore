@@ -17,3 +17,5 @@ data
 
 # Keep the Vosk model out of the image; it is mounted at runtime in docker-compose.
 backend/models
+modules/vosk-model-ru-0.42
+modules/vosk-model-small-ru-0.22
