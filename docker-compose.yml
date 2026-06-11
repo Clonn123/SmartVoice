@@ -30,12 +30,120 @@ services:
       # Логи
       - ./asterisk_log:/var/log/asterisk
 
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    networks:
+      - voip-net
+
+  # ======================================================
+  # PYTHON AI / RTP
+  # ======================================================
+
+  smartvoice:
+    build:
+      context: ./
+    image: smartvoice:latest
+    container_name: smart_voice
+
+    restart: unless-stopped
+
+    depends_on:
+      - asterisk
+
+    working_dir: /smartvoice
+
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    
+    volumes:
+      - ./backend:/smartvoice
+      - ./backend/data:/smartvoice/data
+      - ./modules/vosk-model-small-ru-0.22:/smartvoice/modules/vosk-model-small-ru-0.22
+
+    ports:
+      - "8000:8000"
+
+
+    environment:
+      DATABASE_URL: postgresql+asyncpg://smartvoice_admin:1qp21qp2@postgres:5432/smartvoice
+      REDIS_URL: redis://redis:6379/0
+  
+    networks:
+      - voip-net
+  
+  # =======================================================
+  # CELERY WORKER
+  # =======================================================
+  celery-worker:
+    image: smartvoice:latest
+  
+    container_name: celery-worker
+    restart: unless-stopped
+
+    depends_on:
+      - redis
+      - postgres
+
+    command: celery -A app.core.celery worker -l info --concurrency=1
+
+    environment:
+      DATABASE_URL: postgresql+asyncpg://smartvoice_admin:1qp21qp2@postgres:5432/smartvoice
+      REDIS_URL: redis://redis:6379/0
+      RTP_HOST: celery-worker
+      RTP_PORT: 6000
+
+    ports:
+      # RTP для Asterisk externalMedia
+      - "6000:6000/udp"
+
+    volumes:
+      - ./backend:/smartvoice
+      - ./backend/data:/smartvoice/data
+      - ./modules/vosk-model-small-ru-0.22:/smartvoice/modules/vosk-model-small-ru-0.22
 
     networks:
-      - asterisk_net
+      - voip-net
+
+  # ======================================================
+  # REDIS
+  # ======================================================
+  redis:
+    image: redis:7
+    container_name: redis
+    restart: unless-stopped
+
+    ports:
+      - "6379:6379"
+
+    networks:
+      - voip-net
+
+  # =======================================================
+  # POSTGRES
+  # =======================================================
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: smartvoice
+      POSTGRES_USER: smartvoice_admin
+      POSTGRES_PASSWORD: 1qp21qp2
+
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+    networks:
+      - voip-net
+# =========================================================
+# NETWORK
+# =========================================================
 
 networks:
-  asterisk_net:
+  voip-net:
     driver: bridge
+
+volumes:
+  pg_data:
+

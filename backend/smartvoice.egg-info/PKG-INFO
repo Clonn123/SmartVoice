@@ -1,0 +1,31 @@
+Metadata-Version: 2.4
+Name: smartvoice
+Version: 0.1.0
+Summary: FastAPI MVP base for a single-route AI call-center flow.
+Requires-Python: <3.11,>=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: fastapi
+Requires-Dist: pydantic
+Requires-Dist: pydantic-settings
+Requires-Dist: uvicorn[standard]
+Requires-Dist: httpx
+Requires-Dist: vosk
+Requires-Dist: ari_client
+Requires-Dist: requests==2.31.0
+Requires-Dist: setuptools==69.0.3
+Requires-Dist: webrtcvad
+Requires-Dist: numpy
+Requires-Dist: scipy
+Provides-Extra: dev
+Requires-Dist: fastapi; extra == "dev"
+Requires-Dist: pydantic; extra == "dev"
+Requires-Dist: pydantic-settings; extra == "dev"
+Requires-Dist: uvicorn[standard]; extra == "dev"
+Requires-Dist: httpx; extra == "dev"
+Requires-Dist: vosk; extra == "dev"
+Requires-Dist: ari_client; extra == "dev"
+Requires-Dist: requests==2.31.0; extra == "dev"
+Requires-Dist: setuptools==69.0.3; extra == "dev"
+Requires-Dist: webrtcvad; extra == "dev"
+Requires-Dist: numpy; extra == "dev"
+Requires-Dist: scipy; extra == "dev"

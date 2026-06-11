@@ -7,7 +7,12 @@ from pathlib import Path
 from urllib.parse import quote
 from uuid import uuid4
 
-from app.modules.calls.runtime import AudioArtifact, CallSession, CustomerAudio, FinishedCall
+from app.modules.calls.runtime import (
+    AudioArtifact,
+    CallSession,
+    CustomerAudio,
+    FinishedCall,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +28,9 @@ class VoskCallRuntimeGateway:
         test_audio_path: str | None = None,
     ) -> None:
         if not model_path:
-            raise ValueError("Требуется VOSK_MODEL_PATH, если CALL_RUNTIME_PROVIDER=vosk")
+            raise ValueError(
+                "Требуется VOSK_MODEL_PATH, если CALL_RUNTIME_PROVIDER=vosk"
+            )
 
         self.sample_rate = sample_rate
         self.fallback_text = fallback_text

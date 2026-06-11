@@ -5,6 +5,7 @@ try:
     # Python 3.11+ provides StrEnum
     from enum import StrEnum  # type: ignore
 except Exception:
+
     class StrEnum(str, Enum):
         pass
 
