@@ -4477,3 +4477,78 @@
 [Jun  3 17:15:59] WARNING[133] ari/ari_websockets.c: WebSocket read error: Success
 [Jun  3 17:16:03] ERROR[44] cdr_csv.c: Unable to open file /var/log/asterisk//cdr-csv//Master.csv : No such file or directory
 [Jun  3 17:16:03] WARNING[44] cdr_csv.c: Unable to write CSV record to master '/var/log/asterisk//cdr-csv//Master.csv' : No such file or directory
+[Jun 12 14:41:22] Asterisk 22.9.0 built by root @ buildkitsandbox on a x86_64 running Linux on 2026-05-20 09:05:33 UTC
+[Jun 12 14:41:22] NOTICE[1] loader.c: 339 modules will be loaded.
+[Jun 12 14:41:23] NOTICE[1] res_config_ldap.c: No directory user found, anonymous binding as default.
+[Jun 12 14:41:23] ERROR[1] res_config_ldap.c: No directory URL or host found.
+[Jun 12 14:41:23] ERROR[1] res_config_ldap.c: Cannot load LDAP RealTime driver.
+[Jun 12 14:41:23] WARNING[1] res_config_pgsql.c: PostgreSQL RealTime: No database user found, using 'asterisk' as default.
+[Jun 12 14:41:23] WARNING[1] res_config_pgsql.c: PostgreSQL RealTime: No database password found, using 'asterisk' as default.
+[Jun 12 14:41:23] WARNING[1] res_config_pgsql.c: PostgreSQL RealTime: No database host found, using localhost via socket.
+[Jun 12 14:41:23] WARNING[1] res_config_pgsql.c: PostgreSQL RealTime: No database name found, using 'asterisk' as default.
+[Jun 12 14:41:23] WARNING[1] res_config_pgsql.c: PostgreSQL RealTime: No database port found, using 5432 as default.
+[Jun 12 14:41:23] WARNING[1] res_config_pgsql.c: PostgreSQL RealTime: No database socket found, using '/tmp/.s.PGSQL.5432' as default.
+[Jun 12 14:41:23] ERROR[1] res_config_pgsql.c: PostgreSQL RealTime: Failed to connect database asterisk on : 
+[Jun 12 14:41:23] WARNING[1] res_config_pgsql.c: PostgreSQL RealTime: Couldn't establish connection. Check debug.
+[Jun 12 14:41:23] NOTICE[1] cdr.c: CDR simple logging enabled.
+[Jun 12 14:41:23] NOTICE[1] indications.c: Default country for indication tones: us
+[Jun 12 14:41:23] NOTICE[1] indications.c: Setting default indication country to 'us'
+[Jun 12 14:41:24] WARNING[1] res_musiconhold.c: No music on hold classes configured, disabling music on hold.
+[Jun 12 14:41:24] NOTICE[1] res_smdi.c: No SMDI interfaces are available to listen on, not starting SMDI listener.
+[Jun 12 14:41:24] WARNING[1] res_phoneprov.c: Unable to find a valid server address or name.
+[Jun 12 14:41:24] NOTICE[1] confbridge/conf_config_parser.c: Adding default_menu menu to app_confbridge
+[Jun 12 14:41:24] WARNING[1] cel_pgsql.c: CEL pgsql config file missing global section.
+[Jun 12 14:41:24] NOTICE[1] cdr_pgsql.c: cdr_pgsql configuration contains no global section, skipping module load.
+[Jun 12 14:41:24] NOTICE[1] cdrel_custom/config.c: cdr_custom.conf: Loaded 0 configs
+[Jun 12 14:41:24] WARNING[1] config.c: parse error: No category context for line 64 of /etc/asterisk/cel_sqlite3_custom.conf
+[Jun 12 14:41:24] ERROR[1] cdrel_custom/config.c: Unable to load cel_sqlite3_custom.conf. Not logging CELs to custom database
+[Jun 12 14:41:24] NOTICE[1] cdrel_custom/config.c: cel_custom.conf: Loaded 0 configs
+[Jun 12 14:41:24] NOTICE[1] cdrel_custom/config.c: cdr_sqlite3_custom.conf: Loaded 0 configs
+[Jun 12 14:41:24] WARNING[1] ael/pval.c: Warning: file /etc/asterisk/extensions.ael, line 196-196: macro call to ael-dundi-e164 cannot be found in the AEL code!
+[Jun 12 14:41:24] WARNING[1] ael/pval.c: Warning: file /etc/asterisk/extensions.ael, line 209-209: macro call to ael-dundi-e164 cannot be found in the AEL code!
+[Jun 12 14:41:24] WARNING[1] ael/pval.c: Warning: file /etc/asterisk/extensions.ael, line 328-328: macro call to ael-std-exten-ael cannot be found in the AEL code!
+[Jun 12 14:41:24] WARNING[1] loader.c: Some non-required modules failed to load.
+[Jun 12 14:41:24] WARNING[1] loader.c: Module 'res_adsi' has been loaded but may be removed in a future release.
+[Jun 12 14:41:24] WARNING[1] loader.c: Module 'app_getcpeid' has been loaded but may be removed in a future release.
+[Jun 12 14:41:24] WARNING[1] loader.c: Module 'app_adsiprog' has been loaded but may be removed in a future release.
+[Jun 12 14:41:25] ERROR[1] loader.c: Error loading module 'format_ogg_vorbis.so': libvorbisenc.so.2: cannot open shared object file: No such file or directory
+[Jun 12 14:41:25] ERROR[1] loader.c: cdr_pgsql declined to load.
+[Jun 12 14:41:25] ERROR[1] loader.c: cdr_custom declined to load.
+[Jun 12 14:41:25] ERROR[1] loader.c: cel_sqlite3_custom declined to load.
+[Jun 12 14:41:25] ERROR[1] loader.c: cel_custom declined to load.
+[Jun 12 14:41:25] ERROR[1] loader.c: cdr_sqlite3_custom declined to load.
+[Jun 12 14:41:25] WARNING[27] pbx_config.c: users.conf is deprecated and will be removed in a future version of Asterisk
+[Jun 12 14:41:33] WARNING[134] res_http_websocket.c: Web socket closed abruptly
+[Jun 12 14:41:33] WARNING[134] ari/ari_websockets.c: WebSocket read error: Success
+[Jun 12 14:41:44] WARNING[138] res_http_websocket.c: Web socket closed abruptly
+[Jun 12 14:41:44] WARNING[138] ari/ari_websockets.c: WebSocket read error: Success
+[Jun 12 14:41:55] WARNING[142] res_http_websocket.c: Web socket closed abruptly
+[Jun 12 14:41:55] WARNING[142] ari/ari_websockets.c: WebSocket read error: Success
+[Jun 12 14:42:08] WARNING[184] res_http_websocket.c: Web socket closed abruptly
+[Jun 12 14:42:08] WARNING[184] ari/ari_websockets.c: WebSocket read error: Success
+[Jun 12 14:42:21] WARNING[188] res_http_websocket.c: Web socket closed abruptly
+[Jun 12 14:42:21] WARNING[188] ari/ari_websockets.c: WebSocket read error: Success
+[Jun 12 14:42:32] WARNING[230] res_http_websocket.c: Web socket closed abruptly
+[Jun 12 14:42:32] WARNING[230] ari/ari_websockets.c: WebSocket read error: Success
+[Jun 12 14:42:54] WARNING[234] res_http_websocket.c: Web socket closed abruptly
+[Jun 12 14:42:54] WARNING[234] ari/ari_websockets.c: WebSocket read error: Success
+[Jun 12 14:43:05] WARNING[276] res_http_websocket.c: Web socket closed abruptly
+[Jun 12 14:43:05] WARNING[276] ari/ari_websockets.c: WebSocket read error: Success
+[Jun 12 14:43:16] WARNING[280] res_http_websocket.c: Web socket closed abruptly
+[Jun 12 14:43:16] WARNING[280] ari/ari_websockets.c: WebSocket read error: Success
+[Jun 12 14:43:49] WARNING[322] res_http_websocket.c: Web socket closed abruptly
+[Jun 12 14:43:49] WARNING[322] ari/ari_websockets.c: WebSocket read error: Success
+[Jun 12 14:44:00] WARNING[364] res_http_websocket.c: Web socket closed abruptly
+[Jun 12 14:44:00] WARNING[364] ari/ari_websockets.c: WebSocket read error: Success
+[Jun 12 14:44:11] WARNING[368] res_http_websocket.c: Web socket closed abruptly
+[Jun 12 14:44:11] WARNING[368] ari/ari_websockets.c: WebSocket read error: Success
+[Jun 12 14:44:23] WARNING[372] res_http_websocket.c: Web socket closed abruptly
+[Jun 12 14:44:23] WARNING[372] ari/ari_websockets.c: WebSocket read error: Success
+[Jun 12 14:44:35] WARNING[414] res_http_websocket.c: Web socket closed abruptly
+[Jun 12 14:44:35] WARNING[414] ari/ari_websockets.c: WebSocket read error: Success
+[Jun 12 14:44:46] WARNING[418] res_http_websocket.c: Web socket closed abruptly
+[Jun 12 14:44:46] WARNING[418] ari/ari_websockets.c: WebSocket read error: Success
+[Jun 12 14:44:58] WARNING[422] res_http_websocket.c: Web socket closed abruptly
+[Jun 12 14:44:58] WARNING[422] ari/ari_websockets.c: WebSocket read error: Success
+[Jun 12 14:45:10] WARNING[464] res_http_websocket.c: Web socket closed abruptly
+[Jun 12 14:45:10] WARNING[464] ari/ari_websockets.c: WebSocket read error: Success

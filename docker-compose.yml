@@ -132,6 +132,27 @@ services:
 
     networks:
       - voip-net
+  # ======================================================
+  # GRAFANA
+  # ======================================================
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin          # Смените пароль в production!
+      GF_INSTALL_PLUGINS: ""                     # Можно перечислить плагины через запятую
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana            # Дашборды, настройки, плагины
+    networks:
+      - voip-net
+
 # =========================================================
 # NETWORK
 # =========================================================
@@ -142,4 +163,5 @@ networks:
 
 volumes:
   pg_data:
+  grafana_data:
 

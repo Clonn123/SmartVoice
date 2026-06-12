@@ -80,7 +80,7 @@ class Settings(BaseSettings):
     @field_validator("VOSK_MODEL_PATH", mode="before")
     @classmethod
     def _alias_vosk_model_path(cls, value, info):
-        return value or info.data.get("vosk_model_path") or "models/vosk-model-ru-0.42"
+        return value or info.data.get("vosk_model_path") or "modules/vosk-model-ru-0.42"
 
     @field_validator("VOSK_SAMPLE_RATE", mode="before")
     @classmethod
