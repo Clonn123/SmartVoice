@@ -144,7 +144,7 @@ class TTSService:
                 self.playback_finished.set()
 
     def _speak(self, text: str, context: dict, enqueued_at: datetime):
-        wav_path, duration_ms = asyncio.run(self._generate_tts(text, context=context))
+        wav_path = asyncio.run(self._generate_tts(text, context=context))
 
         self._push_wav_to_queue(
             wav_path,
@@ -152,7 +152,7 @@ class TTSService:
             enqueued_at=enqueued_at,
         )
 
-        self._wait_for_rtp_flush(duration_ms=duration_ms)
+        self._wait_for_rtp_flush()
 
     async def _generate_tts(self, text: str, context: dict | None = None):
         context = context or {}
@@ -196,14 +196,12 @@ class TTSService:
                 format="wav",
             )
 
-            duration_ms = len(audio)
-
             span.tag(
                 wav_path=wav_path,
-                audio_duration_ms=duration_ms,
+                audio_duration_ms=len(audio),
             )
 
-            return wav_path, duration_ms
+            return wav_path
 
     def _push_wav_to_queue(self, wav_path, context: dict, enqueued_at: datetime):
         first_audio_sent = False
@@ -279,18 +277,14 @@ class TTSService:
 
         print("✅ TTS FINISHED")
 
-    def _wait_for_rtp_flush(self, duration_ms: int):
-        # Ждем, пока исходящая очередь RTP будет опустошена, затем ждем оставшееся временя воспроизведения аудио. Сделал, чтобы не обрывало последнюю прощальную реплику
-        max_drain_wait = min(duration_ms / 1000.0 + 3.0, 15.0)
-        start_time = time.time()
-        drain_deadline = start_time + max_drain_wait
+    def _wait_for_rtp_flush(self):
+        started = time.time()
 
-        while time.time() < drain_deadline:
+        while self.running and time.time() - started < 10:
             if self.rtp.outbound_audio.empty():
-                break
-            time.sleep(0.05)
+                time.sleep(0.3)
 
-        elapsed = time.time() - start_time
-        playback_left = max(0.0, duration_ms / 1000.0 - elapsed)
-        if playback_left > 0:
-            time.sleep(playback_left)
+                if self.rtp.outbound_audio.empty():
+                    return
+
+            time.sleep(0.05)

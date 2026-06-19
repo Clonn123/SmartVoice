@@ -83,22 +83,6 @@ class AsteriskCaller:
             self.cleanup_call()
             raise
 
-    def collect_call_artifacts(self) -> dict:
-        pipeline = self.pipeline
-
-        if not pipeline:
-            return {"dialog": [], "recording_path": None}
-
-        dialog = [
-            {"role": message.role, "content": message.content}
-            for message in getattr(pipeline, "dialog_history", [])
-        ]
-
-        return {
-            "dialog": dialog,
-            "recording_path": getattr(pipeline, "recording_path", None),
-        }
-
     def cleanup_call(self):
         ctx = self.ctx
 

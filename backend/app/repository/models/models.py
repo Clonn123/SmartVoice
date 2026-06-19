@@ -99,9 +99,6 @@ class CallAttempt(Base):
 
     error = Column(Text, nullable=True)
 
-    dialog_json = Column(JSON, nullable=True)
-    recording_path = Column(String(512), nullable=True)
-
     started_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     finished_at = Column(DateTime, nullable=True)
 

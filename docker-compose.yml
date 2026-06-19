@@ -53,9 +53,9 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     
     volumes:
+      # LIVE CODE MOUNT
       - ./backend:/smartvoice
-      - ./backend/data:/smartvoice/data
-      - ./modules/vosk-model-small-ru-0.22:/smartvoice/modules/vosk-model-small-ru-0.22
+      - ./modules/vosk-model-ru-0.42:/smartvoice/modules/vosk-model-ru-0.42
 
     ports:
       - "8000:8000"
@@ -86,18 +86,14 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://smartvoice_admin:1qp21qp2@postgres:5432/smartvoice
       REDIS_URL: redis://redis:6379/0
-      RTP_HOST: celery-worker
-      RTP_PORT: 6000
 
     ports:
-      # RTP для Asterisk externalMedia
+      # optional debug port
       - "6000:6000/udp"
 
     volumes:
-      - ./backend:/smartvoice
-      - ./backend/data:/smartvoice/data
-      - ./modules/vosk-model-small-ru-0.22:/smartvoice/modules/vosk-model-small-ru-0.22
-
+      - ./modules/vosk-model-ru-0.42:/smartvoice/modules/vosk-model-ru-0.42
+  
     networks:
       - voip-net
 
@@ -136,6 +132,27 @@ services:
 
     networks:
       - voip-net
+  # ======================================================
+  # GRAFANA
+  # ======================================================
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin          # Смените пароль в production!
+      GF_INSTALL_PLUGINS: ""                     # Можно перечислить плагины через запятую
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana            # Дашборды, настройки, плагины
+    networks:
+      - voip-net
+
 # =========================================================
 # NETWORK
 # =========================================================
@@ -146,4 +163,5 @@ networks:
 
 volumes:
   pg_data:
+  grafana_data:
 

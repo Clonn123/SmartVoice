@@ -78,7 +78,6 @@ async def register_handlers(ari, caller):
 
         ctx.hangup_cause = getattr(event, "cause", None)
         ctx.hangup_text = getattr(event, "cause_txt", None)
-        ctx.finished = True
 
         print(
             "📞 CALL FINISHED:",
@@ -100,6 +99,4 @@ async def register_handlers(ari, caller):
                     pass
 
         finally:
-            # Оставляем конвейер и сессию RTP нетронутыми до тех пор, пока финализатор не соберет
-            # артефакты диалогов и записи. Очистка произведет остановку позже.
-            pass
+            caller.cleanup_call()

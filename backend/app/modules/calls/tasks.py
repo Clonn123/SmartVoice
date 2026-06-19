@@ -6,7 +6,7 @@ from datetime import datetime
 from celery.signals import worker_process_init, worker_process_shutdown
 
 from app.core.celery import celery
-from app.modules.calls.call_task_ops import (
+from app.modules.calls.service import (
     create_attempt,
     finish_attempt,
     resolve_result_from_hangup,
@@ -275,8 +275,6 @@ async def _run_call_task_async(celery_task, call_task_id: int):
                     hangup_cause=result_payload["hangup_cause"],
                     hangup_text=result_payload["hangup_text"],
                     error=error_text,
-                    dialog=result_payload.get("dialog"),
-                    recording_path=result_payload.get("recording_path"),
                 )
 
                 await update_call_task_after_attempt(
@@ -368,7 +366,6 @@ async def _run_single_call(
     attempt_id: int,
 ):
     caller = None
-    result: dict | None = None
 
     with bind_metrics(
         task_id=str(call_data["id"]),
@@ -462,14 +459,13 @@ async def _run_single_call(
                     },
                 )
 
-                result = {
+                return {
                     "answered": False,
                     "bot_finished": False,
                     "channel_id": None,
                     "hangup_cause": None,
                     "hangup_text": "CALL_START_TIMEOUT",
                 }
-                return result
 
             channel_id = getattr(ctx, "channel_id", None)
 
@@ -568,11 +564,6 @@ async def _run_single_call(
 
         finally:
             if caller:
-                if result is not None:
-                    artifacts = caller.collect_call_artifacts()
-                    result["dialog"] = artifacts["dialog"]
-                    result["recording_path"] = artifacts["recording_path"]
-
                 try:
                     with metric_span(
                         "caller.cleanup",
